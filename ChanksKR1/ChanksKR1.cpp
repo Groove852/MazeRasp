@@ -25,8 +25,8 @@ const int   secondQuarter[2]          = {-1,1};
 const int   thirdQuarter[2]           = {-1,-1};
 const int   fourthQuarter[2]          = {1,-1};
 
-//структура каждой точки с информацией о ней же 
-//(IDK COMPLETE)
+// структура каждой точки с информацией о ней же 
+// (IDK COMPLETE)
 struct point
 {
     float  spacing;
@@ -34,27 +34,24 @@ struct point
     int    index;
 };
 
-//метод для перевода из строкового в целочисленный тип данных 
-//(COMPLETE)
-string to_string(int n[])
-{
-    ostringstream ss;
-    ss << n;
-    return ss.str();
-}
-
-//Регулятор 
-//(COMPLETE, WAIT TESTING)
-int PID(int spdL, int spdR, float err, float Kp, float Ki, float Kd, vector<float> sensorsValue, int timerValue) 
-{
-    int PID      = lastPID + Kp * Ki * err + Kp * (err - lastErr) + ((Kp * Kd) / timerValue) * (err - 2 * lastErr + lastLastErr);
+// Регулятор 
+// (COMPLETE, WAIT TESTING)
+int PID(float err, float Kp, float Ki, float Kd, int timerValue) 
+{   
+    int PID;
+    if (err == 0) {
+        lastPID = 0;
+        PID = 0;
+    }
+    PID          = lastPID + Kp * Ki * err + Kp * (err - lastErr) + ((Kp * Kd) / timerValue) * (err - 2 * lastErr + lastLastErr);
     lastPID      = PID;
     lastLastErr  = lastErr;
     lastErr      = err;
     return PID;
 }
 
-//Координаты конца вектора (COMPLETE, WAIT TESTING)
+// Координаты конца вектора 
+// (COMPLETE, WAIT TESTING)
 vector<float> coordEndVector(float length, int angleAndIndex) 
 {
     vector<float> coord;
@@ -65,21 +62,64 @@ vector<float> coordEndVector(float length, int angleAndIndex)
     return coord;//yVector; 
 }
 
-//расчёт вхождения точек в чанки 
-//(UNCOMPLETE)
+// расчёт вхождения точек в чанки 
+// (UNCOMPLETE)
 bool comparison() 
 {
     return 0;
 }
 
-//структура одного чанка 
-//(UNCOMPLETE)
-class Chank {
+// структура одного сабчанка
+// (UNCOMPLETE)
+class Subchank {
 private:
+
     static const unsigned int Vertex = 4;
     static const unsigned int Coordinates = 2;
+    int vertexes[Vertex][Coordinates]; //координаты вершины каждого квадрата(чанка)
+    int numberOfPoints; //колличество точек входящих в чанк
+
 public:
-    //если хочешь узнать что это, то напиши, я тебе статейку скину
+    Subchank() {
+    }
+    Subchank(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
+        vertexes[0][0] = x1; //x1,
+        vertexes[0][1] = y1; //y1
+
+        vertexes[1][0] = x2; //x2
+        vertexes[1][1] = y2; //y2
+
+        vertexes[2][0] = x3; //x3
+        vertexes[2][1] = y3; //y3
+
+        vertexes[3][0] = x4; //x4
+        vertexes[3][1] = y4; //y4
+    }
+
+};
+
+// структура одного чанка 
+// (UNCOMPLETE)
+class Chank {
+private:
+
+    static const unsigned int Vertex = 4;
+    static const unsigned int Coordinates = 2;
+    int vertexes[Vertex][Coordinates]; //координаты вершины каждого квадрата(чанка)
+    int numberOfPoints; //колличество точек входящих в чанк
+    string niceVertexes = "[ ";// найс вертексы
+
+    //метод для перевода из строкового в целочисленный тип данных 
+    //(COMPLETE)
+    string to_string(int n[])
+    {
+        ostringstream ss;
+        ss << n;
+        return ss.str();
+    }
+
+public:
+
     Chank() {
     }
     Chank(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
@@ -96,16 +136,9 @@ public:
         vertexes[3][1] = y4; //y4
     }
 
-    int vertexes[Vertex][Coordinates]; //координаты вершины каждого квадрата(чанка)
-    int numberOfPoints; //колличество точек входящих в чанк
-    point arrayOfPoints[100];
-    float cardinalDirections[4];//длина по каждой из 4 сторон света, где Север соответствует 
-    float error; //ошибка, вычисляемая в чанке
-
-    string niceVertexes = "[ ";// найс вертексы
-
-    //расчёт ошибки
-    void computation() {
+    //получение ошибки из сабчанков
+    //(UNCOMPLETE)
+    void getComputation(int SubchankIndex) {
 
     }
 
@@ -120,24 +153,60 @@ public:
         niceVertexes += "]";
         return niceVertexes;
     }
+
+    //запуск вычислений в чанке
+    //(UNCOMPLETE)
+    void run(float sensorValues[360]) {
+        getComputation(0);
+        getComputation(1);
+        getComputation(2);
+        getComputation(3);
+        showVertexes();
+        for (int i = 0; i < 360; i++) {
+            comparison(sensorValues[i]);
+        }
+    }
+
 };
 
+//чанки по четвертям
+Chank firstChank;
+Chank secondChank;
+Chank thirdChank;
+Chank fourthChank;
 
-Chank internalArrayMap[numberOfInternalChanks];//массив внешних чанков (0, 1, 2, 3 согласно рисунку на флипчарте)
-Chank cornerArrayMap[numberOfCornerChanks];//массив чанков, которые операются на углы (6, 9, 12, 15 согласно рисунку на флипчарте)
-Chank directionArrayMap[numberOfDirectionChanks];//массив чанков, которые операются на стороны(4, 5, 7, 8, 10, 11, 13, 14 согласно рисунку на флипчарте)
+double scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+    return msg->ranges;
+}
+
+vector<int> scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+    vector<int> valuesFromOpenCR;
+    valuesFromOpenCR.push_back(msg->spdL);
+    valuesFromOpenCR.push_back(msg->spdR);
+    valuesFromOpenCR.push_back(msg->temp);
+    return valuesFromOpenCR;
+}
 
 int main()
 {
+    float error;
     //ros::ok()
     while (true) {
         unsigned int startTime = clock();
-        cin >> lenght;
-        cin >> angle;
-        cout << coordEndVector(lenght, angle)[0] << "  ";
-        cout << coordEndVector(lenght, angle)[1] << endl;
+        /*
+        firstChank.run();
+        secondChank.run();
+        thirdChank.run();
+        fourthChank.run();
+        */
+
+
+        PID(error, 1, 1, 1, startTime);
+
         float endTime = clock();
         float timer = endTime - startTime;
         cout << timer << endl;
+        startTime = 0;
+        endTime = 0;
     }
 }
